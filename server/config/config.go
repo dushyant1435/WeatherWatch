@@ -8,7 +8,7 @@ type AlertThresholds struct {
 
 // Example thresholds
 var Thresholds = AlertThresholds{
-    Temperature: 20.0,
+    Temperature: 40.0,
     Condition:   "",  // Empty if no specific condition is tracked
     Consecutive: 2,
 }

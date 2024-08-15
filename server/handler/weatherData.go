@@ -31,7 +31,7 @@ func FetchAndStoreWeatherData(db *sql.DB) {
 			}
 		}
 
-		time.Sleep(8 * time.Second) // Wait for 5 minutes before fetching data again
+		time.Sleep(5 * time.Minute) // Wait for 5 minutes before fetching data again
 	}
 }
 

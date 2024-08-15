@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Chart</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .home-button {
+            margin-top: 20px;
+        }
+        .home-button a {
+            text-decoration: none;
+            color: white;
+            background-color: #007BFF;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .home-button a:hover {
+            background-color: #0056b3;
+        }
+        .loading {
+            font-size: 18px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Chart</h1>
+        <div id="resultContainer">
+            <img id="weatherChart" alt="Weather Chart">
+            <div class="home-button">
+                <a href="index.html">Go to Home Page</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to format date as yyyy-MM-ddTHH:mm:ssZ
+        function formatDateLocal(date) {
+            const pad = (num) => num.toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const month = pad(date.getMonth() + 1); // Months are zero-based
+            const day = pad(date.getDate());
+            const hours = pad(date.getHours());
+            const minutes = pad(date.getMinutes());
+            const seconds = pad(date.getSeconds());
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`;
+        }
+
+        // Parse query parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const city = urlParams.get('city');
+        const hours = parseInt(urlParams.get('hours'), 10);
+
+        if (!city || isNaN(hours) || hours <= 0) {
+            alert("Invalid query parameters.");
+            window.location.href = 'index.html'; // Redirect to the form page
+        } else {
+            // Calculate start and end times
+            const now = new Date();
+            const end = formatDateLocal(now);
+            const start = formatDateLocal(new Date(now.getTime() - hours * 60 * 60 * 1000));
+
+            // Construct API URL
+            const apiUrl = `http://localhost:8080/api/v1/weather/chart?city=${encodeURIComponent(city)}&start=${start}&end=${end}`;
+
+            // Show a loading message or indicator if needed
+            const chartImg = document.getElementById('weatherChart');
+            const resultContainer = document.getElementById('resultContainer');
+            chartImg.src = ''; // Clear previous image
+            chartImg.style.display = 'none'; // Hide image while loading
+
+            // Fetch the chart image
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const imageUrl = URL.createObjectURL(blob);
+                    chartImg.src = imageUrl;
+                    chartImg.style.display = 'block'; // Show the image
+
+                    // Wait for 5 minutes before hiding the result
+                    setTimeout(() => {
+                        resultContainer.style.display = 'none'; // Hide the result container after 5 minutes
+                    }, 300000); // 300000 milliseconds = 5 minutes
+                })
+                .catch(error => {
+                    console.error('Error fetching the chart:', error);
+                    alert('Failed to fetch the weather chart. Please try again.');
+                });
+        }
+    </script>
+</body>
+</html>

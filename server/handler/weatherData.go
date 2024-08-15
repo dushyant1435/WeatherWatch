@@ -31,7 +31,7 @@ func FetchAndStoreWeatherData(db *sql.DB) {
 			}
 		}
 
-		time.Sleep(5 * time.Minute) // Wait for 5 minutes before fetching data again
+		time.Sleep(8 * time.Second) // Wait for 5 minutes before fetching data again
 	}
 }
 
@@ -68,11 +68,21 @@ func fetchWeatherData(city string) (models.WeatherData, error) {
 // storeWeatherData inserts the weather data into the database
 func storeWeatherData(db *sql.DB, data models.WeatherData) error {
 	sqlStatement := `
-		INSERT INTO weather_data (city_name, timestamp, temperature, feels_like, weather_main)
-		VALUES ($1, $2, $3, $4, $5)`
+        INSERT INTO weather_data (city_name, timestamp, temperature, feels_like, weather_main)
+        VALUES ($1, $2, $3, $4, $5)`
 
 	_, err := db.Exec(sqlStatement, data.CityName, data.Timestamp, data.Temperature, data.FeelsLike, data.WeatherMain)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// After storing data, check recent data for alert conditions
+	err = CheckRecentWeatherData(db, data.CityName)
+	if err != nil {
+		log.Printf("Error checking recent weather data: %v", err)
+	}
+
+	return nil
 }
 
 // GetWeatherDataHandler retrieves weather data for a specific city and date from the database
